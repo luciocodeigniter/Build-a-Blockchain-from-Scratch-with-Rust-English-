@@ -170,6 +170,25 @@ fn main() {
             },
             support::Extrinsic {
                 caller: lucio.clone(),
+                call: RuntimeCall::BalancesTranfer { to: miriam.clone(), amount: 3000 }
+            },
+        ],
+    };
+
+    // preparando o bloco 2	
+    let block_2 = types::Block {
+        header: support::Header { block_number: 2 },
+        extrinsic: vec![
+            support::Extrinsic {
+                caller: miriam.clone(),
+                call: RuntimeCall::BalancesTranfer { to: lucio.clone(), amount: 5000 }
+            },
+            support::Extrinsic {
+                caller: miriam.clone(),
+                call: RuntimeCall::BalancesTranfer { to: julio.clone(), amount: 1000 }
+            },
+            support::Extrinsic {
+                caller: lucio.clone(),
                 call: RuntimeCall::BalancesTranfer { to: miriam, amount: 3000 }
             },
         ],
@@ -177,6 +196,7 @@ fn main() {
 
     // executamos a transação
     let _ = runtime.execute_block(block_1).expect("Failed to execute block 1");
+    let _ = runtime.execute_block(block_2).expect("Failed to execute block 2");
 
     // exibo que há dentro do runtime
     println!("{:#?}", runtime)
