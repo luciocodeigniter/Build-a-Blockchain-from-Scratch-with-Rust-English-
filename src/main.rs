@@ -1,8 +1,10 @@
 use support::Dispatch;
 
-mod balances; // import the module
+// importando os módulos
+mod balances; 
 mod support;
 mod system;
+mod proof_of_existence;
 
 // configuramos tipos para serem passados como argumento para os Pallets
 mod types {
