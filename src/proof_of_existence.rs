@@ -1,4 +1,4 @@
-use crate::support::DispachResult;
+use crate::support::DispatchResult;
 use core::fmt::Debug;
 use std::collections::BTreeMap;
 
@@ -31,7 +31,7 @@ impl<T: Config> Pallet<T> {
 
     /// Cria um novo claim (content, documento, file, etc) em nome do `Caller`
     /// Retorna um erro se o alguém já criou um `claim` com o mesmo nome
-    pub fn create_claim(&mut self, caller: T::AccountId, claim: T::Content) -> DispachResult {
+    pub fn create_claim(&mut self, caller: T::AccountId, claim: T::Content) -> DispatchResult {
         match self.get_claim(&claim) {
             // antes de criar um `claim` precisamos verificar se ele já não existe
             Some(_) => Err("Claim already exists"),
@@ -47,7 +47,7 @@ impl<T: Config> Pallet<T> {
 
     /// revoga (abre mão) da existência de algum `claim` (conteúdo)
     /// Essa função só retornará sucesso se o o `caller` for o dono do `claim`
-    pub fn revoke_claim(&mut self, caller: T::AccountId, claim: T::Content) -> DispachResult {
+    pub fn revoke_claim(&mut self, caller: T::AccountId, claim: T::Content) -> DispatchResult {
         // se o `claim` não existir, lançamos um erro
         let claim_owner = self.get_claim(&claim).ok_or("Claim não existe")?;
 
@@ -77,7 +77,7 @@ impl <T: Config> crate::support::Dispatch for Pallet<T> {
     type Caller = T::AccountId;
     type Call = Call<T>;
 
-    fn dispatch(&mut self, caller: Self::Caller, call: Self::Call) -> DispachResult {
+    fn dispatch(&mut self, caller: Self::Caller, call: Self::Call) -> DispatchResult {
         match call {
             Call::CreateClaim { claim } => self.create_claim(caller, claim),
             Call::RevokeClaim { claim } => self.revoke_claim(caller, claim),

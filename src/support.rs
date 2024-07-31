@@ -26,7 +26,7 @@ pub struct Extrinsic<Caller, Call> {
 
 /// O tipo de resultado do nosso runtime. Quando tudo é concluído com sucesso,
 /// retornamos 'Ok(())', caso contrário, retornamos uma mensagem de erro estática
-pub type DispachResult = Result<(), &'static str>;
+pub type DispatchResult = Result<(), &'static str>;
 
 pub trait Dispatch {
     /// O tipo usado para identificar quem está fazendo a chamada
@@ -38,5 +38,5 @@ pub trait Dispatch {
     /// Esta função recebe um 'caller' e a 'call' que ele quer fazer,
     /// e retorna um 'Result' baseado no resultado dessa chamada de função.
     /// Ela é responsável por executar a lógica da transação.
-    fn dispatch(&mut self, caller: Self::Caller, call: Self::Call) -> DispachResult;
+    fn dispatch(&mut self, caller: Self::Caller, call: Self::Call) -> DispatchResult;
 }

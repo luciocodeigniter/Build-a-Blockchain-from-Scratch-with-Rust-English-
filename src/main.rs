@@ -87,7 +87,7 @@ impl crate::support::Dispatch for Runtime {
         &mut self,
         caller: Self::Caller,
         runtime_call: Self::Call,
-    ) -> support::DispachResult {
+    ) -> support::DispatchResult {
         // Verifica qual tipo de chamada está sendo feita
         match runtime_call {
             RuntimeCall::Balances(call) => {
@@ -116,7 +116,7 @@ impl Runtime {
     }
 
     /// execute a block of extrinsics.
-    fn execute_block(&mut self, block: types::Block) -> support::DispachResult {
+    fn execute_block(&mut self, block: types::Block) -> support::DispatchResult {
         // incrementamos o número do bloco
         self.system.increment_block_number();
 

@@ -41,7 +41,7 @@ impl<T: Config> crate::support::Dispatch for Pallet<T> {
         &mut self,
         caller: Self::Caller,
         call: Self::Call,
-    ) -> crate::support::DispachResult {
+    ) -> crate::support::DispatchResult {
         match call {
             Call::Transfer { to, amount } => {
                 self.transfer(caller, to, amount)?;
@@ -51,6 +51,7 @@ impl<T: Config> crate::support::Dispatch for Pallet<T> {
         Ok(())
     }
 }
+
 
 /**
  * Para a implementação do Pallet, devo passar dois tipos genéricos <AccountId, Amount>,

@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 num = "0.4.3"
+macros = { path = "./macros/"} # aqui estou apontando o diretório 'macros' que está em `web3dev\macros`
