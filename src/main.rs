@@ -1,10 +1,10 @@
 use support::Dispatch;
 
 // importando os módulos
-mod balances; 
+mod balances;
+mod proof_of_existence;
 mod support;
 mod system;
-mod proof_of_existence;
 
 // configuramos tipos para serem passados como argumento para os Pallets
 mod types {
@@ -20,10 +20,14 @@ mod types {
     pub type Extrinsic = support::Extrinsic<AccountId, crate::RuntimeCall>;
     pub type Header = support::Header<BlockNumber>;
     pub type Block = support::Block<Header, Extrinsic>;
+
+    // tipos para Proof Of Existence
+    pub type Content = String;
 }
 
 pub enum RuntimeCall {
     Balances(balances::Call<Runtime>),
+    ProofOfExistence(proof_of_existence::Call<Runtime>),
 }
 
 // implento o a trait config do system.rs para Runtime
@@ -41,11 +45,28 @@ impl balances::Config for Runtime {
     type Amount = types::Amount;
 }
 
-/// coordena as ações entre o Balances e o System, ou outros módulos existentes
+impl proof_of_existence::Config for Runtime {
+    type Content = types::Content;
+}
+
+/// Estrutura principal que representa o runtime da blockchain.
+/// Este trecho define a estrutura principal do runtime da blockchain.
+/// Cada campo representa um módulo (ou "pallet") específico
+/// que compõe a funcionalidade da blockchain
+/// Cada módulo é parametrizado com <Runtime>,
+/// o que significa que eles são configurados especificamente
+/// para trabalhar com esta implementação de Runtime.
+/// aqui estamos definindo um interface `Runtime`
 #[derive(Debug)]
 pub struct Runtime {
+    /// Módulo responsável por gerenciar os saldos das contas
     balances: balances::Pallet<Runtime>,
-    system: system::Pallet<Runtime>, // aqui estamos passando o nosso Runtime que implementa o config do system.rs
+
+    /// Módulo que lida com funcionalidades básicas do sistema, como contas e blocos
+    system: system::Pallet<Runtime>,
+
+    /// Módulo que implementa a funcionalidade de prova de existência
+    proof_of_existence: proof_of_existence::Pallet<Runtime>,
 }
 
 /// Este código implementa a lógica de despacho para o runtime da blockchain.
@@ -72,6 +93,9 @@ impl crate::support::Dispatch for Runtime {
             RuntimeCall::Balances(call) => {
                 self.balances.dispatch(caller, call)?;
             }
+            RuntimeCall::ProofOfExistence(call) => {
+                self.proof_of_existence.dispatch(caller, call)?;
+            }
         }
 
         // Retorna sucesso se a operação foi concluída sem erros
@@ -79,13 +103,15 @@ impl crate::support::Dispatch for Runtime {
     }
 }
 
-// implementa a interface Runtime
+// implementa a interface Runtime (struct Runtime)
 impl Runtime {
-    // instancia o 'balances' e o 'system'
+    // instancia o Runtime principam
+    // e dentro dele instancia os Pallets necessários
     pub fn new() -> Self {
         Runtime {
             balances: balances::Pallet::new(),
             system: system::Pallet::new(),
+            proof_of_existence: proof_of_existence::Pallet::new(),
         }
     }
 
@@ -157,6 +183,8 @@ fn main() {
     // preparando o bloco 1
     let block_1 = types::Block {
         header: support::Header { block_number: 1 },
+
+        // extrinsic precisa receber o `caller` e qual é a chamada `call`
         extrinsic: vec![support::Extrinsic {
             caller: miriam.clone(),
             call: RuntimeCall::Balances(balances::Call::Transfer {
@@ -170,6 +198,54 @@ fn main() {
     let _ = runtime
         .execute_block(block_1)
         .expect("Failed to execute block 1");
+
+    // preparando o bloco 2 para criação de um `claim`
+    let block_2 = types::Block {
+        header: support::Header { block_number: 2 },
+        extrinsic: vec![support::Extrinsic {
+            caller: lucio.clone(),
+            call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::CreateClaim {
+                claim: "MY_DOC".to_string(),
+            }),
+        }],
+    };
+
+    // executamos a transação
+    let _ = runtime
+        .execute_block(block_2)
+        .expect("Failed to execute block 2");
+
+    // preparando o bloco 3 para remoção de um `claim`
+    let block_3 = types::Block {
+        header: support::Header { block_number: 3 },
+        extrinsic: vec![support::Extrinsic {
+            caller: lucio.clone(),
+            call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::RevokeClaim {
+                claim: "MY_DOC".to_string(),
+            }),
+        }],
+    };
+
+    // executamos a transação
+    let _ = runtime
+        .execute_block(block_3)
+        .expect("Failed to execute block 3");
+
+    // preparando o bloco 4 para criação de um `claim`
+    let block_4 = types::Block {
+        header: support::Header { block_number: 4 },
+        extrinsic: vec![support::Extrinsic {
+            caller: miriam.clone(),
+            call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::CreateClaim {
+                claim: "documento_da_miriam".to_string(),
+            }),
+        }],
+    };
+
+    // executamos a transação
+    let _ = runtime
+        .execute_block(block_4)
+        .expect("Failed to execute block 3");
 
     // exibo que há dentro do runtime
     println!("{:#?}", runtime)

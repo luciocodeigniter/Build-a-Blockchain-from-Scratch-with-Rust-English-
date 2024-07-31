@@ -7,7 +7,8 @@ pub trait Config: crate::system::Config {
 }
 
 /// esse é o módulo Prova de Existência
-/// Esse módulo permite aos users afirmar a existência de algum dado, documento, etc
+/// Implementa a funcionalidade de prova de existência, 
+/// permitindo que os usuários registrem e verifiquem a existência de dados na blockchain.
 #[derive(Debug)]
 pub struct Pallet<T: Config> {
     // Um `Content` pertence a uma `AccountId`,
@@ -64,6 +65,26 @@ impl<T: Config> Pallet<T> {
     }
 }
 
+/// Tipos de `chamadas` (calls) que esse Pallet provém
+pub enum Call<T: Config> {
+
+    // para cada `call` invocada, é necessário informar os respectivos parâmetros ao 
+    CreateClaim { claim: T::Content },
+    RevokeClaim { claim: T::Content },
+}
+
+impl <T: Config> crate::support::Dispatch for Pallet<T> {
+    type Caller = T::AccountId;
+    type Call = Call<T>;
+
+    fn dispatch(&mut self, caller: Self::Caller, call: Self::Call) -> DispachResult {
+        match call {
+            Call::CreateClaim { claim } => self.create_claim(caller, claim),
+            Call::RevokeClaim { claim } => self.revoke_claim(caller, claim),
+        }
+    }
+}
+
 mod tests {
 
     struct TestConfig;
@@ -99,15 +120,19 @@ mod tests {
         // 1 - verificamos se o erro retornado é "Caller is not the owner of the claim"
         // ao tentamos remover o claim que não é da miriam
         let result = poe.revoke_claim("miriam".to_string(), "my_code".to_string());
-        assert_eq!(result, Err("Caller is not the owner of the claim"));
+        assert_eq!(result, Err("Caller is not the owner of the claim")); // verificamos se a mensagem de erro é a esperada
 
         // --- Teste em que miriam tenta criar um claim que já existe ---//
         let result = poe.create_claim("miriam".to_string(), "my_code".to_string());
-        assert_eq!(result, Err("Claim already exists"));
-
+        assert_eq!(result, Err("Claim already exists")); // verificamos se a mensagem de erro é a esperada
 
         // --- Teste em que tenta remover um claim que não existe ---//
         let result = poe.revoke_claim("miriam".to_string(), "outro_code".to_string());
-        assert_eq!(result, Err("Claim não existe"))
+        assert_eq!(result, Err("Claim não existe")); // verificamos se a mensagem de erro é a esperada
+
+        // --- Teste de remoção do `claim` -----//
+        let result = poe.revoke_claim("lucio".to_string(), "my_code".to_string());
+        assert_eq!(result, Ok(())); // verificamos se o retorno é `Ok(())`
+        assert_eq!(poe.get_claim(&"my_code".to_string()), None); // verificamos se depois de removido é `None`
     }
 }

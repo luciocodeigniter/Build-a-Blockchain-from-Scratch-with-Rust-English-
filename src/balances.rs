@@ -26,7 +26,10 @@ pub struct Pallet<T: Config> {
     balance: BTreeMap<T::AccountId, T::Amount>,
 }
 
+/// Tipos de `chamadas` (calls) que esse Pallet provém
 pub enum Call<T: Config> {
+
+    // para cada `call` invocada, é necessário informar os respectivos parâmetros ao 
     Transfer { to: T::AccountId, amount: T::Amount },
 }
 
