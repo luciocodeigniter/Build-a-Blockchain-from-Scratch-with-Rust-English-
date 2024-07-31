@@ -26,65 +26,9 @@ pub struct Pallet<T: Config> {
     balance: BTreeMap<T::AccountId, T::Amount>,
 }
 
-/// Tipos de `chamadas` (calls) que esse Pallet provém
-pub enum Call<T: Config> {
 
-    // para cada `call` invocada, é necessário informar os respectivos parâmetros ao 
-    Transfer { to: T::AccountId, amount: T::Amount },
-}
-
-impl<T: Config> crate::support::Dispatch for Pallet<T> {
-    type Caller = T::AccountId;
-    type Call = Call<T>;
-
-    fn dispatch(
-        &mut self,
-        caller: Self::Caller,
-        call: Self::Call,
-    ) -> crate::support::DispatchResult {
-        match call {
-            Call::Transfer { to, amount } => {
-                self.transfer(caller, to, amount)?;
-            }
-        }
-
-        Ok(())
-    }
-}
-
-
-/**
- * Para a implementação do Pallet, devo passar dois tipos genéricos <AccountId, Amount>,
- * onde cada um deles deve implementar métodos específicos. Vide Where
- */
+#[macros::call]
 impl<T: Config> Pallet<T> {
-    pub fn new() -> Self {
-        // Aqui podemos criar um novo objeto do tipo Pallet
-        // quando quero um novo objeto, basta chamar Pallet::new()
-        Pallet {
-            balance: BTreeMap::new(),
-        }
-    }
-
-    // inserimos no map o amount na conta definida.
-    // o '&mut self' indica que algo vai mudar entro desse Pallet,
-    // ou seja, &mut pemite que read/write
-    pub fn set_balance(&mut self, account: &T::AccountId, amount: T::Amount) {
-        // Aqui podemos adicionar um novo saldo
-        self.balance.insert(account.clone(), amount);
-    }
-
-    pub fn get_balance(&self, account: &T::AccountId) -> T::Amount {
-        // Aqui podemos pegar o saldo de uma carteira se ela existir,
-        // caso contrário retorna zero
-        //! note que tem o '*' no início, o que significa que é um
-        //! ponteiro para o própria instância de balance (&self)
-        *self
-            .balance
-            .get(&account.clone())
-            .unwrap_or(&T::Amount::zero())
-    }
-
     /// Transfere fundos de uma conta para outra.
     ///
     /// # Argumentos
@@ -140,6 +84,39 @@ impl<T: Config> Pallet<T> {
 
         // tudo certo
         Ok(())
+    }
+}
+
+/**
+ * Para a implementação do Pallet, devo passar dois tipos genéricos <AccountId, Amount>,
+ * onde cada um deles deve implementar métodos específicos. Vide Where
+ */
+impl<T: Config> Pallet<T> {
+    pub fn new() -> Self {
+        // Aqui podemos criar um novo objeto do tipo Pallet
+        // quando quero um novo objeto, basta chamar Pallet::new()
+        Pallet {
+            balance: BTreeMap::new(),
+        }
+    }
+
+    // inserimos no map o amount na conta definida.
+    // o '&mut self' indica que algo vai mudar entro desse Pallet,
+    // ou seja, &mut pemite que read/write
+    pub fn set_balance(&mut self, account: &T::AccountId, amount: T::Amount) {
+        // Aqui podemos adicionar um novo saldo
+        self.balance.insert(account.clone(), amount);
+    }
+
+    pub fn get_balance(&self, account: &T::AccountId) -> T::Amount {
+        // Aqui podemos pegar o saldo de uma carteira se ela existir,
+        // caso contrário retorna zero
+        //! note que tem o '*' no início, o que significa que é um
+        //! ponteiro para o própria instância de balance (&self)
+        *self
+            .balance
+            .get(&account.clone())
+            .unwrap_or(&T::Amount::zero())
     }
 }
 

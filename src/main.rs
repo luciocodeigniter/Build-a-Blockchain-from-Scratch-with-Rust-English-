@@ -187,7 +187,7 @@ fn main() {
         // extrinsic precisa receber o `caller` e qual é a chamada `call`
         extrinsic: vec![support::Extrinsic {
             caller: miriam.clone(),
-            call: RuntimeCall::Balances(balances::Call::Transfer {
+            call: RuntimeCall::Balances(balances::Call::transfer {
                 to: lucio.clone(),
                 amount: 100,
             }),
