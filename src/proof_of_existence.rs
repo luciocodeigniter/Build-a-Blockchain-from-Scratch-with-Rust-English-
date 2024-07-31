@@ -7,7 +7,7 @@ pub trait Config: crate::system::Config {
 }
 
 /// esse é o módulo Prova de Existência
-/// Implementa a funcionalidade de prova de existência, 
+/// Implementa a funcionalidade de prova de existência,
 /// permitindo que os usuários registrem e verifiquem a existência de dados na blockchain.
 #[derive(Debug)]
 pub struct Pallet<T: Config> {
@@ -16,19 +16,10 @@ pub struct Pallet<T: Config> {
     claims: BTreeMap<T::Content, T::AccountId>,
 }
 
+/// implementamos o struct Pallet, mas apenas com as funções que queremos expor para uso.
+/// Por isso colocamos o #[macros::call]
+#[macros::call]
 impl<T: Config> Pallet<T> {
-    pub fn new() -> Self {
-        Self {
-            // inicializamos o `claims`
-            claims: BTreeMap::new(),
-        }
-    }
-
-    /// Recupera o owner do claim, se existir, caso contrário retorna null
-    pub fn get_claim(&self, claim: &T::Content) -> Option<&T::AccountId> {
-        self.claims.get(&claim)
-    }
-
     /// Cria um novo claim (content, documento, file, etc) em nome do `Caller`
     /// Retorna um erro se o alguém já criou um `claim` com o mesmo nome
     pub fn create_claim(&mut self, caller: T::AccountId, claim: T::Content) -> DispatchResult {
@@ -65,25 +56,20 @@ impl<T: Config> Pallet<T> {
     }
 }
 
-/// Tipos de `chamadas` (calls) que esse Pallet provém
-pub enum Call<T: Config> {
-
-    // para cada `call` invocada, é necessário informar os respectivos parâmetros ao 
-    CreateClaim { claim: T::Content },
-    RevokeClaim { claim: T::Content },
-}
-
-impl <T: Config> crate::support::Dispatch for Pallet<T> {
-    type Caller = T::AccountId;
-    type Call = Call<T>;
-
-    fn dispatch(&mut self, caller: Self::Caller, call: Self::Call) -> DispatchResult {
-        match call {
-            Call::CreateClaim { claim } => self.create_claim(caller, claim),
-            Call::RevokeClaim { claim } => self.revoke_claim(caller, claim),
+impl<T: Config> Pallet<T> {
+    pub fn new() -> Self {
+        Self {
+            // inicializamos o `claims`
+            claims: BTreeMap::new(),
         }
     }
+
+    /// Recupera o owner do claim, se existir, caso contrário retorna null
+    pub fn get_claim(&self, claim: &T::Content) -> Option<&T::AccountId> {
+        self.claims.get(&claim)
+    }
 }
+
 
 mod tests {
 

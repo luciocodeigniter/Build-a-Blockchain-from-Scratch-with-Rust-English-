@@ -204,7 +204,7 @@ fn main() {
         header: support::Header { block_number: 2 },
         extrinsic: vec![support::Extrinsic {
             caller: lucio.clone(),
-            call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::CreateClaim {
+            call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::create_claim {
                 claim: "MY_DOC".to_string(),
             }),
         }],
@@ -220,7 +220,7 @@ fn main() {
         header: support::Header { block_number: 3 },
         extrinsic: vec![support::Extrinsic {
             caller: lucio.clone(),
-            call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::RevokeClaim {
+            call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::revoke_claim {
                 claim: "MY_DOC".to_string(),
             }),
         }],
@@ -236,7 +236,7 @@ fn main() {
         header: support::Header { block_number: 4 },
         extrinsic: vec![support::Extrinsic {
             caller: miriam.clone(),
-            call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::CreateClaim {
+            call: RuntimeCall::ProofOfExistence(proof_of_existence::Call::create_claim {
                 claim: "documento_da_miriam".to_string(),
             }),
         }],

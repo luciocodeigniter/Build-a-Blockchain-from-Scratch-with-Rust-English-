@@ -26,7 +26,8 @@ pub struct Pallet<T: Config> {
     balance: BTreeMap<T::AccountId, T::Amount>,
 }
 
-
+/// implementamos o struct Pallet, mas apenas com as funções que queremos expor para uso.
+/// Por isso colocamos o #[macros::call]
 #[macros::call]
 impl<T: Config> Pallet<T> {
     /// Transfere fundos de uma conta para outra.
