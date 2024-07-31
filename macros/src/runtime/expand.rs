@@ -30,7 +30,7 @@ pub fn expand_runtime(def: RuntimeDef) -> proc_macro2::TokenStream {
 				if block.header.block_number != self.system.block_number() {
 					return Err(&"block number does not match what is expected")
 				}
-				for (i, support::Extrinsic { caller, call }) in block.extrinsics.into_iter().enumerate() {
+				for (i, support::Extrinsic { caller, call }) in block.extrinsic.into_iter().enumerate() {
 					self.system.inc_nonce(&caller);
 					let _res = self.dispatch(caller, call).map_err(|e| {
 						eprintln!(

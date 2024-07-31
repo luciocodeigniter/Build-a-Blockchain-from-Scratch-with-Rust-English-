@@ -37,7 +37,7 @@ impl<T: Config> Pallet<T> {
         }
     }
 
-    pub fn get_block_number(&self) -> T::BlockNumber {
+    pub fn block_number(&self) -> T::BlockNumber {
         self.block_number
     }
 
@@ -45,15 +45,15 @@ impl<T: Config> Pallet<T> {
         *self.nonce.get(account).unwrap_or(&T::Nonce::zero())
     }
 
-    pub fn increment_block_number(&mut self) {
+    pub fn inc_block_number(&mut self) {
         // dará crash no código se o número ultrapassar o 'u64'
         self.block_number = self
-            .get_block_number()
+            .block_number()
             .checked_add(&T::BlockNumber::one())
             .unwrap();
     }
 
-    pub fn increment_nonce(&mut self, account: &T::AccountId) {
+    pub fn inc_nonce(&mut self, account: &T::AccountId) {
         // se o nonce não existir, o valor é 1,
         let nonce = *self.nonce.get(account).unwrap_or(&T::Nonce::zero()) + T::Nonce::one();
         self.nonce.insert(account.clone(), nonce);
@@ -78,16 +78,16 @@ mod test {
         let mut system: super::Pallet<TestConfig> = super::Pallet::new();
 
         // o número de blocos é zero?
-        assert_eq!(system.get_block_number(), 0);
+        assert_eq!(system.block_number(), 0);
 
         // incrementamos o bloco
-        system.increment_block_number();
+        system.inc_block_number();
 
         // o número de blocos é 1?
-        assert_eq!(system.get_block_number(), 1);
+        assert_eq!(system.block_number(), 1);
 
         // incrementamos o nonce da Alice
-        system.increment_nonce(&"Alice".to_string());
+        system.inc_nonce(&"Alice".to_string());
 
         // o nonce de Alice agora é 1?
         assert_eq!(system.get_nonce(&"Alice".to_string()), 1);
