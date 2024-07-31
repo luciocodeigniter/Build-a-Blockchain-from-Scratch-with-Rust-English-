@@ -25,6 +25,30 @@ pub struct Pallet<T: Config> {
     // no nosso caso aqui, estamos armazenando em memória
     balance: BTreeMap<T::AccountId, T::Amount>,
 }
+
+pub enum Call<T: Config> {
+    Transfer { to: T::AccountId, amount: T::Amount },
+}
+
+impl<T: Config> crate::support::Dispatch for Pallet<T> {
+    type Caller = T::AccountId;
+    type Call = Call<T>;
+
+    fn dispatch(
+        &mut self,
+        caller: Self::Caller,
+        call: Self::Call,
+    ) -> crate::support::DispachResult {
+        match call {
+            Call::Transfer { to, amount } => {
+                self.transfer(caller, to, amount)?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
 /**
  * Para a implementação do Pallet, devo passar dois tipos genéricos <AccountId, Amount>,
  * onde cada um deles deve implementar métodos específicos. Vide Where
@@ -134,7 +158,7 @@ mod test {
     #[test]
     fn success_tranfer() {
         // instanciamos o Pallet de balances
-        let mut balances: super::Pallet<TestConfig> =  super::Pallet::new();
+        let mut balances: super::Pallet<TestConfig> = super::Pallet::new();
 
         // defino os usuários (account)
         let miriam = "Miriam".to_string();

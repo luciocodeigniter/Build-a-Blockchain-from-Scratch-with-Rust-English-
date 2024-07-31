@@ -21,14 +21,7 @@ mod types {
 }
 
 pub enum RuntimeCall {
-    // ao tranferir um valor para outra conta, não preciso passar o 'from',
-    // pois o nosso self.dispatch já sabe quem é o 'from', ou seja,
-    // quem está transferindo. Portanto, basta informamos o 'to' e o 'amount'
-    // esse `BalancesTranfer` será invocado no support::DispachResult{....}
-    BalancesTranfer {
-        to: types::AccountId,
-        amount: types::Amount,
-    },
+    Balances(balances::Call<Runtime>),
 }
 
 // implento o a trait config do system.rs para Runtime
@@ -53,28 +46,33 @@ pub struct Runtime {
     system: system::Pallet<Runtime>, // aqui estamos passando o nosso Runtime que implementa o config do system.rs
 }
 
+/// Este código implementa a lógica de despacho para o runtime da blockchain.
+/// Ele define como as chamadas são processadas, especificamente
+/// lidando com transferências de saldo.
+/// A função dispatch recebe o chamador e a chamada,
+/// executa a ação apropriada (neste caso, uma transferência)
+/// e retorna o resultado da operação.
 impl crate::support::Dispatch for Runtime {
+    // Define o tipo de identificador do chamador como AccountId do sistema
     type Caller = <Runtime as system::Config>::AccountId;
+
+    // Define o tipo de chamada que pode ser despachada
     type Call = RuntimeCall;
-    // dispach a call on behalf od a caller. Increments the caller's nonce.
-    // Dispach allows us to edentify with undelying modules call we want to execute.
-    // Note that we extract the 'caller' from extrinsic and use that information
-    // to determine who we are executing the call on behalf of.
+
+    // Função que processa uma chamada em nome de um chamador
     fn dispatch(
         &mut self,
-        caller: Self::Caller, // referência ao Caller do support.rs
-        runtime_call: Self::Call, // referência ao Caller do support.rs
+        caller: Self::Caller,
+        runtime_call: Self::Call,
     ) -> support::DispachResult {
-        // o que o user da blockchain está tentando fazer?
-        // é um `RuntimeCall::BalancesTranfer`?
+        // Verifica qual tipo de chamada está sendo feita
         match runtime_call {
-            // Sim. Então vamos rotear essa chamada para o Pallet Balances,
-            // enviando os três argumentos: `caller`, `to` e `amount`
-            RuntimeCall::BalancesTranfer { to, amount } => {
-                self.balances.transfer(caller, to, amount)?;
+            RuntimeCall::Balances(call) => {
+                self.balances.dispatch(caller, call)?;
             }
         }
 
+        // Retorna sucesso se a operação foi concluída sem erros
         Ok(())
     }
 }
@@ -111,23 +109,22 @@ impl Runtime {
             // incrementamos o nonce do caller
             self.system.increment_nonce(&caller);
 
-            // chama o método dispatch do Runtime, 
-            // passando o caller (quem está iniciando a transação) 
+            // chama o método dispatch do Runtime,
+            // passando o caller (quem está iniciando a transação)
             // e o call (a ação que deve ser executada).
             let _ = self.dispatch(caller, call).map_err(|e| {
-                
-                // O .map_err(|e| { ... }) é usado para tratar 
-                // qualquer erro que possa ocorrer durante o dispatch. 
+                // O .map_err(|e| { ... }) é usado para tratar
+                // qualquer erro que possa ocorrer durante o dispatch.
                 // Se ocorrer um erro, o código dentro dessa closure será executado.
-                // Dentro da closure, temos um eprintln! que imprime uma mensagem de erro formatada. 
+                // Dentro da closure, temos um eprintln! que imprime uma mensagem de erro formatada.
                 // Esta mensagem inclui:
                 // 1. O número do bloco atual (block.header.block_number)
                 // 2. O número da transação dentro do bloco (counter)
                 // 3. A mensagem de erro específica (e)
 
-                // Esta abordagem permite que o sistema 
-                // continue processando as próximas transações do bloco, 
-                // mesmo se uma transação específica falhar, 
+                // Esta abordagem permite que o sistema
+                // continue processando as próximas transações do bloco,
+                // mesmo se uma transação específica falhar,
                 // apenas registrando o erro para referência futura.
                 eprintln!(
                     "Extrinsic Error\n\tBlock Number: {}\n\tExtrinsict Number: {}\n\tError: {}",
@@ -151,52 +148,26 @@ fn main() {
     // nossos usuários
     let miriam: String = "miriam".to_string();
     let lucio: String = "lucio".to_string();
-    let julio: String = "julio".to_string();
 
     // definimos os saldos para miriam no valor de 10.000
     runtime.balances.set_balance(&miriam, 10000);
 
-    // preparando o bloco 1	
+    // preparando o bloco 1
     let block_1 = types::Block {
         header: support::Header { block_number: 1 },
-        extrinsic: vec![
-            support::Extrinsic {
-                caller: miriam.clone(),
-                call: RuntimeCall::BalancesTranfer { to: lucio.clone(), amount: 5000 }
-            },
-            support::Extrinsic {
-                caller: miriam.clone(),
-                call: RuntimeCall::BalancesTranfer { to: julio.clone(), amount: 1000 }
-            },
-            support::Extrinsic {
-                caller: lucio.clone(),
-                call: RuntimeCall::BalancesTranfer { to: miriam.clone(), amount: 3000 }
-            },
-        ],
-    };
-
-    // preparando o bloco 2	
-    let block_2 = types::Block {
-        header: support::Header { block_number: 2 },
-        extrinsic: vec![
-            support::Extrinsic {
-                caller: miriam.clone(),
-                call: RuntimeCall::BalancesTranfer { to: lucio.clone(), amount: 5000 }
-            },
-            support::Extrinsic {
-                caller: miriam.clone(),
-                call: RuntimeCall::BalancesTranfer { to: julio.clone(), amount: 1000 }
-            },
-            support::Extrinsic {
-                caller: lucio.clone(),
-                call: RuntimeCall::BalancesTranfer { to: miriam, amount: 3000 }
-            },
-        ],
+        extrinsic: vec![support::Extrinsic {
+            caller: miriam.clone(),
+            call: RuntimeCall::Balances(balances::Call::Transfer {
+                to: lucio.clone(),
+                amount: 100,
+            }),
+        }],
     };
 
     // executamos a transação
-    let _ = runtime.execute_block(block_1).expect("Failed to execute block 1");
-    let _ = runtime.execute_block(block_2).expect("Failed to execute block 2");
+    let _ = runtime
+        .execute_block(block_1)
+        .expect("Failed to execute block 1");
 
     // exibo que há dentro do runtime
     println!("{:#?}", runtime)
